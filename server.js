@@ -45,6 +45,19 @@ app.get('/modules/search', (req, res) => {
     });
 });
 
+
+app.get('/modules/all', (req, res) => {
+    const sql = 'SELECT * FROM module';
+    
+    db.query(sql, (err, results) => {
+        if(err) {
+            return res.status(500).json({ error: err.message})
+        }
+        res.json(results)
+    })
+
+})
+
 // Start the server
 const PORT = process.env.PORT || 5001;
 console.log("Server script started!");
