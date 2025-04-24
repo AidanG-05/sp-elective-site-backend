@@ -89,6 +89,56 @@ app.get('/modules/:module_code/reviews', (req, res) => {
   });
 });
 
+//Post review to the database
+app.post('/review/submission', (req, res) => {
+  const {
+    Academic_Year,
+    Semester,
+    Ratings,
+    Rating_Reason,
+    TLDR_experiences,
+    Assignment_Review,
+    Assignment_Weightage,
+    Life_Hacks,
+    Elective_Code,
+    Elective_Module
+  } = req.body;
+
+  const sql = `
+    INSERT INTO user_reviews (
+      Elective_Module,
+      Elective_Code,
+      Academic_Year,
+      Semester,
+      Ratings,
+      Rating_Reason,
+      TLDR_experiences,
+      Assignment_Review,
+      Assignment_Weightage,
+      Life_Hacks
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [
+    Elective_Module,
+    Elective_Code,
+    Academic_Year,
+    Semester,
+    Ratings,
+    Rating_Reason,
+    TLDR_experiences,
+    Assignment_Review,
+    Assignment_Weightage,
+    Life_Hacks
+  ], (err, result) => {
+    if (err) {
+      console.error('Error saving review:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    res.status(200).json({ message: 'Review saved successfully' });
+  });
+});
+
 // Start the server
 const PORT = process.env.PORT || 5001;
 console.log("Server script started!");
