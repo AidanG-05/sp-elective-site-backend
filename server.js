@@ -7,23 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json()); 
 
-const fs = require('fs');
-const path = require('path');
-const morgan = require('morgan');
-
-const logStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
-
-app.use(morgan('combined', { stream: logStream }));
-
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection:', reason);
-});
-
-
 // Create MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -32,7 +15,6 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
   waitForConnections: true,
-  queueLimit: 0,
 });
 
 // Connect to MySQL
