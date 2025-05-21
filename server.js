@@ -5,8 +5,16 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(cors());
 app.use(express.json()); 
+
+//temporary error catch to show on console
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+});
 
 // Create MySQL connection
 const db = mysql.createConnection({
@@ -148,6 +156,10 @@ app.get('/health', (req, res) => {
     }
     res.status(200).json({ status: 'API is healthy', db: 'connected' });
   });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 // Start the server
