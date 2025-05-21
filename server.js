@@ -5,8 +5,24 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(cors());
 app.use(express.json()); 
+
+const fs = require('fs');
+const path = require('path');
+const morgan = require('morgan');
+
+const logStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
+
+app.use(morgan('combined', { stream: logStream }));
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
 
 // Create MySQL connection
 const db = mysql.createConnection({
@@ -15,6 +31,8 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
+  waitForConnections: true,
+  queueLimit: 0,
 });
 
 // Connect to MySQL
@@ -44,7 +62,6 @@ app.get('/modules/search', (req, res) => {
         res.json(results);
     });
 });
-
 
 app.get('/modules/all', (req, res) => {
     const sql = 'SELECT * FROM module';
@@ -137,6 +154,21 @@ app.post('/review/submission', (req, res) => {
     }
     res.status(200).json({ message: 'Review saved successfully' });
   });
+});
+
+//API Connection check
+app.get('/health', (req, res) => {
+  db.ping((err) => {
+    if (err) {
+      console.error('MySQL connection unhealthy:', err.message);
+      return res.status(500).json({ status: 'API unhealthy', db: 'disconnected' });
+    }
+    res.status(200).json({ status: 'API is healthy', db: 'connected' });
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 // Start the server
