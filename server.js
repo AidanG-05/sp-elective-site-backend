@@ -167,10 +167,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
 // Start the server
 const PORT = process.env.PORT || 5001;
 console.log("Server script started!");
