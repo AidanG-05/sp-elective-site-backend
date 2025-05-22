@@ -131,7 +131,7 @@ app.post('/review/submission', (req, res) => {
 
 //API Connection check
 app.get('/health', (req, res) => {
-  db.ping((err) => {
+  db.query((err) => {
     if (err) {
       console.error('MySQL connection unhealthy:', err.message);
       return res.status(500).json({ status: 'API unhealthy', db: 'disconnected' });
