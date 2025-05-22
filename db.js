@@ -22,10 +22,6 @@ setInterval(() => {
   });
 }, 6 * 60 * 60 * 1000);
 
-pool.on('error', (err) => {
-  console.error('MySQL Pool Error:', err.message);
-});
-
 pool.getConnection((err, conn) => {
   if (err) {
     console.error('Error connecting to DB on startup:', err.message);
@@ -33,6 +29,10 @@ pool.getConnection((err, conn) => {
     console.log('DB connected successfully');
     conn.release();
   }
+});
+
+pool.on('error', (err) => {
+  console.error('MySQL Pool Error:', err.message);
 });
 
 module.exports = pool;
