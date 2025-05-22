@@ -26,4 +26,13 @@ pool.on('error', (err) => {
   console.error('MySQL Pool Error:', err.message);
 });
 
+pool.getConnection((err, conn) => {
+  if (err) {
+    console.error('Error connecting to DB on startup:', err.message);
+  } else {
+    console.log('DB connected successfully');
+    conn.release();
+  }
+});
+
 module.exports = pool;

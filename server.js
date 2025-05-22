@@ -131,17 +131,40 @@ app.post('/review/submission', (req, res) => {
 
 //API Connection check
 app.get('/health', (req, res) => {
-  db.query((err) => {
+  const startTime = Date.now();
+
+  db.query({ sql: 'SELECT 1', timeout: 3000 }, (err) => { 
+    const duration = Date.now() - startTime;
+
     if (err) {
-      console.error('MySQL connection unhealthy:', err.message);
-      return res.status(500).json({ status: 'API unhealthy', db: 'disconnected' });
+      console.error(`MySQL ping failed after ${duration}ms:`, err.message);
+      return res.status(500).json({
+        status: 'API unhealthy',
+        db: 'disconnected',
+        responseTimeMs: duration
+      });
     }
-    res.status(200).json({ status: 'API is healthy', db: 'connected' });
+
+    res.status(200).json({
+      status: 'API is healthy',
+      db: 'connected',
+      responseTimeMs: duration
+    });
   });
 });
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
+});
+
+app.use((req, res, next) => {
+  res.setTimeout(5000, () => { // 5 seconds max for all responses
+    console.warn(`Request timeout for ${req.method} ${req.url}`);
+    if (!res.headersSent) {
+      res.status(504).json({ error: 'Request timed out' });
+    }
+  });
+  next();
 });
 
 // Start the server
