@@ -3,6 +3,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 
+const db = require('./db');
 const app = express();
 app.use(cors());
 app.use(express.json()); 
@@ -14,25 +15,6 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', reason);
-});
-
-// Create MySQL connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-  waitForConnections: true,
-});
-
-// Connect to MySQL
-db.connect((err) => {
-  if (err) {
-    console.error('Error connecting to MySQL:', err);
-    return;
-  }
-  console.log('Connected to MySQL on AWS RDS!');
 });
 
 // Search endpoint
@@ -168,3 +150,16 @@ console.log("Server script started!");
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// For pool disconnection and complete shutdown of script
+const shutdown = () => {
+  console.log('Gracefully shutting down...');
+  db.end((err) => {
+    if (err) console.error('Error closing MySQL pool:', err.message);
+    else console.log('MySQL pool closed.');
+    process.exit(err ? 1 : 0);
+  });
+};
+
+process.on('SIGINT', shutdown); // local
+process.on('SIGTERM', shutdown); // hosted
