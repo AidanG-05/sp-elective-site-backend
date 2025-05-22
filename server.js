@@ -153,12 +153,14 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Handle routing error
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// 5s global timeout
 app.use((req, res, next) => {
-  res.setTimeout(5000, () => { // 5 seconds max for all responses
+  res.setTimeout(5000, () => { 
     console.warn(`Request timeout for ${req.method} ${req.url}`);
     if (!res.headersSent) {
       res.status(504).json({ error: 'Request timed out' });
