@@ -8,6 +8,28 @@ const app = express();
 app.use(cors());
 app.use(express.json()); 
 
+const { spawn } = require('child_process');
+
+// Run the Python Flask app
+const flaskProcess = spawn('python', ['app.py'], {
+  cwd: __dirname, // ensure it's running from the right folder
+  shell: true
+});
+
+flaskProcess.stdout.on('data', (data) => {
+  console.log(`[Flask] ${data}`);
+});
+
+flaskProcess.stderr.on('data', (data) => {
+  console.error(`[Flask ERROR] ${data}`);
+});
+
+flaskProcess.on('close', (code) => {
+  console.log(`[Flask] Process exited with code ${code}`);
+});
+
+
+
 //temporary error catch to show on console
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -80,6 +102,8 @@ app.get('/modules/:module_code/reviews', (req, res) => {
 });
 
 //Post review to the database
+const axios = require('axios');
+
 app.post('/review/submission', (req, res) => {
   const {
     Academic_Year,
@@ -120,12 +144,24 @@ app.post('/review/submission', (req, res) => {
     Assignment_Review,
     Assignment_Weightage,
     Life_Hacks
-  ], (err, result) => {
+  ], async (err, result) => {
     if (err) {
       console.error('Error saving review:', err);
       return res.status(500).json({ message: 'Database error' });
     }
-    res.status(200).json({ message: 'Review saved successfully' });
+
+    // ✅ Notify Flask after successful insert
+    try {
+      await axios.post('http://localhost:5002/notify', {
+        Elective_Module,
+        Elective_Code,
+        Ratings
+      });
+    } catch (error) {
+      console.error('[Flask Notify] Error:', error.message);
+    }
+
+    res.status(200).json({ message: 'Review saved and Flask notified' });
   });
 });
 
