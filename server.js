@@ -8,26 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json()); 
 
-const { spawn } = require('child_process');
-
-// Run the Python Flask app
-const flaskProcess = spawn('python', ['app.py'], {
-  cwd: __dirname, // ensure it's running from the right folder
-  shell: true
-});
-
-flaskProcess.stdout.on('data', (data) => {
-  console.log(`[Flask] ${data}`);
-});
-
-flaskProcess.stderr.on('data', (data) => {
-  console.error(`[Flask ERROR] ${data}`);
-});
-
-flaskProcess.on('close', (code) => {
-  console.log(`[Flask] Process exited with code ${code}`);
-});
-
 
 
 //temporary error catch to show on console
@@ -152,7 +132,7 @@ app.post('/review/submission', (req, res) => {
 
     // ✅ Notify Flask after successful insert
     try {
-      await axios.post('http://localhost:5002/notify', {
+      await axios.post('https://sp-elective-site-telebot-production.up.railway.app/notify', {
         Elective_Module,
         Elective_Code,
         Ratings
