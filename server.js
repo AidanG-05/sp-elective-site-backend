@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql2');
 const cors = require('cors');
 const validator = require('validator');
 const rateLimit = require('express-rate-limit');
@@ -21,7 +20,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const reviewLimiter = rateLimit({
   windowMs: 20 * 60 * 1000, // 20 mins 
-  max: 2,                   // 4 submissions per 20 mins per IP
+  max: 2,                   // 2 submissions per 20 mins per ip
   message: {
     status: 429,
     error: 'Too many reviews submitted. Please try again after 20 minutes.'
@@ -91,6 +90,7 @@ app.get('/modules/:module_code/reviews', (req, res) => {
 });
 
 //Post review to the database
+const axios = require('axios');
 app.post('/review/submission', reviewLimiter, (req, res) => {
   const sanitizeInput = (input) => validator.escape(validator.trim(input || ''));
 
@@ -131,12 +131,24 @@ app.post('/review/submission', reviewLimiter, (req, res) => {
     Assignment_Review,
     Assignment_Weightage,
     Life_Hacks
-  ], (err, result) => {
+  ], async (err, result) => {
     if (err) {
       console.error('Error saving review:', err);
       return res.status(500).json({ message: 'Database error' });
     }
-    res.status(200).json({ message: 'Review saved successfully' });
+
+    // ✅ Notify Flask after successful insert
+    try {
+      await axios.post('https://sp-elective-site-telebot-production.up.railway.app/notify', {
+        Elective_Module,
+        Elective_Code,
+        Ratings
+      });
+    } catch (error) {
+      console.error('[Flask Notify] Error:', error.message);
+    }
+
+    res.status(200).json({ message: 'Review saved and Flask notified' });
   });
 });
 
