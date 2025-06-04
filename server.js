@@ -92,18 +92,23 @@ app.get('/modules/:module_code/reviews', (req, res) => {
 //Post review to the database
 const axios = require('axios');
 app.post('/review/submission', reviewLimiter, (req, res) => {
-  const sanitizeInput = (input) => validator.escape(validator.trim(input || ''));
+  const sanitizeInput = (input) => validator.trim(input || '');
 
-  const Academic_Year = sanitizeInput(req.body.Academic_Year);
-  const Semester = sanitizeInput(req.body.Semester);
   const Ratings = parseInt(req.body.Ratings, 10) || 0;
-  const Rating_Reason = sanitizeInput(req.body.Rating_Reason);
-  const TLDR_experiences = sanitizeInput(req.body.TLDR_experiences);
-  const Assignment_Review = sanitizeInput(req.body.Assignment_Review);
-  const Assignment_Weightage = sanitizeInput(req.body.Assignment_Weightage);
-  const Life_Hacks = sanitizeInput(req.body.Life_Hacks);
-  const Elective_Code = sanitizeInput(req.body.Elective_Code);
-  const Elective_Module = sanitizeInput(req.body.Elective_Module);
+  
+  const {
+    Academic_Year,
+    Semester,
+    Rating_Reason,
+    TLDR_experiences,
+    Assignment_Review,
+    Assignment_Weightage,
+    Life_Hacks,
+    Elective_Code,
+    Elective_Module
+  } = req.body;
+  
+  
 
   const sql = `
     INSERT INTO user_reviews (
