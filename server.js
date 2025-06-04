@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const validator = require('validator');
+const rateLimit = require('express-rate-limit');
 
 const db = require('./db');
 const app = express();
@@ -15,6 +17,15 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', reason);
+});
+
+const reviewLimiter = rateLimit({
+  windowMs: 20 * 60 * 1000, // 20 mins 
+  max: 2,                   // 4 submissions per 20 mins per IP
+  message: {
+    status: 429,
+    error: 'Too many reviews submitted. Please try again after 20 minutes.'
+  }
 });
 
 // Search endpoint
@@ -80,19 +91,19 @@ app.get('/modules/:module_code/reviews', (req, res) => {
 });
 
 //Post review to the database
-app.post('/review/submission', (req, res) => {
-  const {
-    Academic_Year,
-    Semester,
-    Ratings,
-    Rating_Reason,
-    TLDR_experiences,
-    Assignment_Review,
-    Assignment_Weightage,
-    Life_Hacks,
-    Elective_Code,
-    Elective_Module
-  } = req.body;
+app.post('/review/submission', reviewLimiter, (req, res) => {
+  const sanitizeInput = (input) => validator.escape(validator.trim(input || ''));
+
+  const Academic_Year = sanitizeInput(req.body.Academic_Year);
+  const Semester = sanitizeInput(req.body.Semester);
+  const Ratings = parseInt(req.body.Ratings, 10) || 0;
+  const Rating_Reason = sanitizeInput(req.body.Rating_Reason);
+  const TLDR_experiences = sanitizeInput(req.body.TLDR_experiences);
+  const Assignment_Review = sanitizeInput(req.body.Assignment_Review);
+  const Assignment_Weightage = sanitizeInput(req.body.Assignment_Weightage);
+  const Life_Hacks = sanitizeInput(req.body.Life_Hacks);
+  const Elective_Code = sanitizeInput(req.body.Elective_Code);
+  const Elective_Module = sanitizeInput(req.body.Elective_Module);
 
   const sql = `
     INSERT INTO user_reviews (
