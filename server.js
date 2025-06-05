@@ -19,11 +19,11 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const reviewLimiter = rateLimit({
-  windowMs: 20 * 60 * 1000, // 20 mins 
-  max: 2,                   // 2 submissions per 20 mins per ip
+  windowMs: 20 * 60 * 1000, 
+  max: 2,                   
   message: {
     status: 429,
-    error: 'Too many reviews submitted. Please try again after 20 minutes.'
+    error: 'Too many reviews submitted.'
   }
 });
 
