@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 
 const db = require('./db');
 const app = express();
+const API = process.env.TELE_API
 app.use(cors());
 app.use(express.json()); 
 
@@ -111,7 +112,7 @@ app.post('/review/submission', reviewLimiter, (req, res) => {
   
 
   const sql = `
-    INSERT INTO user_reviews (
+    INSERT INTO pending_reviews (
       Elective_Module,
       Elective_Code,
       Academic_Year,
@@ -142,18 +143,26 @@ app.post('/review/submission', reviewLimiter, (req, res) => {
       return res.status(500).json({ message: 'Database error' });
     }
 
-    // ✅ Notify Flask after successful insert
+    // ✅ Notify both notifier and approval bots
     try {
-      await axios.post('https://sp-elective-site-telebot-production.up.railway.app/notify', {
+      await axios.post(`${API}/send-for-approval`, {
         Elective_Module,
         Elective_Code,
-        Ratings
+        Academic_Year,
+        Semester,
+        Ratings,
+        Rating_Reason,
+        TLDR_experiences,
+        Assignment_Review,
+        Assignment_Weightage,
+        Life_Hacks
       });
+
     } catch (error) {
-      console.error('[Flask Notify] Error:', error.message);
+      console.error('[Notify Error]', error.message);
     }
 
-    res.status(200).json({ message: 'Review saved and Flask notified' });
+    res.status(200).json({ message: 'Review saved and notifications sent' });
   });
 });
 
